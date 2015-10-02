@@ -1,0 +1,164 @@
+package automationFramework;
+
+import java.awt.List;
+import java.util.Random;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.support.ui.Select;
+
+import org.testng.Assert;
+
+public class TestCaseAutomationExample {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		
+		WebDriver driver = new FirefoxDriver();
+		
+		/* 1. Open browser and go to http://demo.opencart.com/ */
+		driver.get("http://demo.opencart.com/");
+		
+		/* 2. Change currency to GBP (top left dropdown) */
+		driver.findElement(By.xpath("//form[@id='currency']/div/button")).click();
+	    driver.findElement(By.name("GBP")).click();
+	    
+	    /* 3. Search for “iPod” using text search */
+	    
+	    driver.findElement(By.name("search")).clear();
+	    
+	    driver.findElement(By.name("search")).sendKeys("ipod");
+	    driver.findElement(By.xpath("(//button[@type='button'])[4]")).click();
+	    
+	    /* 4. Add all iPods returned in search results to product comparison */
+
+	    int productsCount= driver.findElements(By.xpath("//button[@data-original-title='Compare this Product']")).size();
+	    System.out.println("Liczba produktow: "+ productsCount);
+	    
+	    for(int i=1; i<productsCount+1;i++)
+	    {
+	    System.out.println("i: "+ i);
+	    driver.findElement(By.xpath("(//button[@data-original-title='Compare this Product'])["+i+"]")).click();
+	    
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    
+	    }
+	   
+	    /* 5. View product comparison page */
+	    
+	    driver.findElement(By.linkText("product comparison")).click();
+	  //  driver.findElement(By.xpath("(//a[contains(text(),'Remove')])[3]")).click();
+	    
+	   /* 6. Remove the one that is 'Out Of Stock' from comparison */
+	    
+	    int position = 1;
+	    int positionOutOfStock = 0;
+	    String text = "";
+	    
+	    // get position of Out of Stock products
+	    
+	    while ((position<productsCount+2)){
+	    	System.out.println("Position: "+ position);
+	    	text = driver.findElement(By.xpath("//tr[6]/td["+position+"]")).getText();
+	    	System.out.println("Text: "+ text);
+	    	
+	    	if(text.contains("Out")){positionOutOfStock = position-1;}
+	    	
+	    	position++;
+	    }
+
+	    System.out.println("PositionOutOfStock: "+ positionOutOfStock);
+	    
+	    if(positionOutOfStock==0){positionOutOfStock=1;} // in case all products available
+	    
+	    driver.findElement(By.xpath("(//a[contains(text(),'Remove')])["+positionOutOfStock+"]")).click();
+	    
+	    productsCount--;
+	    
+	    /* 7. Add a random available one to shopping cart */
+	    
+	    // get position of Available products
+	    
+	    System.out.println("Task 7: ");
+	    
+	    System.out.println("Liczba produktow: "+ productsCount);
+	    
+	    position = 2;
+	    text = "";
+	    int a=0;
+	    
+	    int[] positionAvailable = new int[productsCount];
+	    
+	    while ((position<productsCount+2)){
+	    	System.out.println("Current Position: "+ position);
+	    	text = driver.findElement(By.xpath("//tr[6]/td["+position+"]")).getText();
+	    	System.out.println("Text: "+ text);
+	    	
+	    	if(text.contains("Days")){
+	    		System.out.println("Position available count: "+ (a+1));
+	    		positionAvailable[a] = position;
+	    		a++; 
+	    		}
+	    	
+	    	position++;
+	    }
+	    
+	    Random random = new Random();
+	    int number = random.nextInt(a);
+	    System.out.println("RANDOM: "+ number);
+	    System.out.println("Position of item: "+ positionAvailable[number]);
+	    driver.findElement(By.xpath("(//input[@value='Add to Cart'])["+(positionAvailable[number]-1)+"]")).click();
+	    
+	    
+	   /* 8. Go to shopping card and verify that total price matches the one from comparison page for selected product */
+	    
+	    //get price from Comparison site
+	    
+	    String priceComparison = driver.findElement(By.xpath("//tr[3]/td["+positionAvailable[number]+"]")).getText();
+	    int pricelength=priceComparison.length();
+	    priceComparison = priceComparison.substring(1, pricelength);
+	    
+	    System.out.println("Price Comparison Page: "+ priceComparison);
+	       
+	    driver.findElement(By.cssSelector("i.fa.fa-shopping-cart")).click();
+	    
+	    //get price from Shopping card
+	    
+	    String priceShoppingCard = driver.findElement(By.xpath("//div[@id='content']/div[2]/div/table/tbody/tr[4]/td[2]")).getText();
+	    int pricelength1=priceShoppingCard.length();
+	    priceShoppingCard = priceShoppingCard.substring(1, pricelength1);
+	    
+	    System.out.println("Price Shopping Card: "+ priceShoppingCard);
+	    
+	    Assert.assertEquals(priceComparison, priceShoppingCard);
+	    
+	    if (priceComparison != priceShoppingCard){
+	    	System.out.println("Prices are NOT the same");
+	    } else System.out.println("Prices are the same");
+	  
+	/*    
+	    String priceShoppingCard = driver.findElement(By.xpath("//div[@id='content']/div[2]/div/table/tbody/tr[4]/td[2]")).getText();
+	    System.out.println("Price Shopping Card: "+ priceShoppingCard);
+	   
+	    System.out.println("Price: "+ price);
+	    */
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		driver.close();
+
+
+	}
+
+}
